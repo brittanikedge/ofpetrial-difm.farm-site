@@ -13,6 +13,7 @@
 #' @param rank_seq_ws (integer) vector of integers indicating the order of the ranking of the rates, which will be repeated "within" a strip.
 #' @param rank_seq_as (integer) vector of integers indicating the order of the ranking of the rates, which will be repeated "across" strip for their first plots.
 #' @param rate_jump_threshold (integer) highest jump in rate rank acceptable
+#' @param factor (boolean) Is treatment a factor rather than numeric?
 #' @returns data.frame of input rate information
 #' @import data.table
 #' @export
@@ -33,7 +34,7 @@
 #'   unit = "seeds",
 #'   rates = c(20000, 25000, 30000, 35000, 40000)
 #' )
-prep_rate <- function(plot_info, gc_rate, unit, rates = NULL, min_rate = NA, max_rate = NA, num_rates = 5, design_type = NA, rank_seq_ws = NULL, rank_seq_as = NULL, rate_jump_threshold = NA) {
+prep_rate <- function(plot_info, gc_rate, unit, rates = NULL, min_rate = NA, max_rate = NA, num_rates = 5, design_type = NA, rank_seq_ws = NULL, rank_seq_as = NULL, rate_jump_threshold = NA, factor = FALSE) {
   #* +++++++++++++++++++++++++++++++++++
   #* Main
   #* +++++++++++++++++++++++++++++++++++
@@ -43,15 +44,24 @@ prep_rate <- function(plot_info, gc_rate, unit, rates = NULL, min_rate = NA, max
   #++++++++++++++++++++++++++++++++++++
   #+ Make rates data (rates and their ranks)
   #++++++++++++++++++++++++++++++++++++
-  rates_data <-
-    find_rates_data(
-      gc_rate = gc_rate,
-      rates = rates,
-      min_rate = min_rate,
-      max_rate = max_rate,
-      num_rates = num_rates,
-      design_type = design_type
-    )
+  if(factor == FALSE){
+    rates_data <-
+      find_rates_data(
+        gc_rate = gc_rate,
+        rates = rates,
+        min_rate = min_rate,
+        max_rate = max_rate,
+        num_rates = num_rates,
+        design_type = design_type
+      )
+  }else{
+    rates_data <-
+      find_rates_data(
+        gc_rate = gc_rate,
+        rates = rates,
+        design_type = design_type
+      )
+  }
 
   #++++++++++++++++++++++++++++++++++++
   #+ Convert original unit to equivalent
@@ -63,7 +73,9 @@ prep_rate <- function(plot_info, gc_rate, unit, rates = NULL, min_rate = NA, max
   tgt_rate_original <- rates_data$rate
 
   #--- trial rates ---#
-  tgt_rate_equiv <- convert_rates(input_trial_data$input_name, unit, tgt_rate_original)
+  if(factor == FALSE){
+    tgt_rate_equiv <- convert_rates(input_trial_data$input_name, unit, tgt_rate_original)
+  }
 
   #++++++++++++++++++++++++++++++++++++
   #+ Assign all the values to the returnig object
@@ -76,10 +88,13 @@ prep_rate <- function(plot_info, gc_rate, unit, rates = NULL, min_rate = NA, max
   input_trial_data$gc_rate <- gc_rate
   input_trial_data$unit <- unit
   input_trial_data$tgt_rate_original <- list(tgt_rate_original)
-  input_trial_data$tgt_rate_equiv <- list(tgt_rate_equiv)
   input_trial_data$rank_seq_ws <- list(rank_seq_ws)
   input_trial_data$rank_seq_as <- list(rank_seq_as)
   input_trial_data$rate_jump_threshold <- rate_jump_threshold
+  input_trial_data$factor <- factor
+  if(factor == FALSE){
+    input_trial_data$tgt_rate_equiv <- list(tgt_rate_equiv)
+  }
 
   return(input_trial_data)
 }
@@ -91,7 +106,7 @@ prep_rate <- function(plot_info, gc_rate, unit, rates = NULL, min_rate = NA, max
 # ! Helper internal functions
 # !===========================================================
 
-find_rates_data <- function(gc_rate, rates = NULL, min_rate = NA, max_rate = NA, num_rates = 5, design_type = NA) {
+find_rates_data <- function(gc_rate, rates = NULL, min_rate = NA, max_rate = NA, num_rates = 5, design_type = NA, factor = FALSE) {
   #* +++++++++++++++++++++++++++++++++++
   #* Debug
   #* +++++++++++++++++++++++++++++++++++
@@ -138,39 +153,48 @@ find_rates_data <- function(gc_rate, rates = NULL, min_rate = NA, max_rate = NA,
   #++++++++++++++++++++++++++++++++++++
   #+ Order (rank) rates based on design type
   #++++++++++++++++++++++++++++++++++++
-  if (design_type %in% c("ls", "str", "rstr", "rb")) {
-    rates_data <-
-      data.table::data.table(
-        rate = rates_ls,
-        rate_rank = 1:length(rates_ls)
-      )
-  } else if (design_type == "sparse") {
-    if (!gc_rate %in% rates_ls) {
-      return(message(
-        "Error: You specified the trial rates directly using the rates argument, but they do not include gc_rate. For the sparse design, please include gc_rate in the rates."
-      ))
-    } else {
-      rates_ls <- rates_ls[!rates_ls %in% gc_rate]
-      rates_data <-
-        data.table::data.table(
-          rate = append(gc_rate, rates_ls),
-          rate_rank = 1:(length(rates_ls) + 1)
-        )
-    }
-  } else if (design_type == "ejca") {
-    if (length(rates_ls) %% 2 == 1) {
-      stop(
-        "Error: You cannot have an odd number of rates for the ejca design. Please either specify rates directly with even numbers of rates or specify an even number for num_rates along with min_rate and max_rate."
-      )
-    } else {
+  #+
+  if(factor == FALSE){
+    if (design_type %in% c("ls", "str", "rstr", "rb")) {
       rates_data <-
         data.table::data.table(
           rate = rates_ls,
           rate_rank = 1:length(rates_ls)
         )
+    } else if (design_type == "sparse") {
+      if (!gc_rate %in% rates_ls) {
+        return(message(
+          "Error: You specified the trial rates directly using the rates argument, but they do not include gc_rate. For the sparse design, please include gc_rate in the rates."
+        ))
+      } else {
+        rates_ls <- rates_ls[!rates_ls %in% gc_rate]
+        rates_data <-
+          data.table::data.table(
+            rate = append(gc_rate, rates_ls),
+            rate_rank = 1:(length(rates_ls) + 1)
+          )
+      }
+    } else if (design_type == "ejca") {
+      if (length(rates_ls) %% 2 == 1) {
+        stop(
+          "Error: You cannot have an odd number of rates for the ejca design. Please either specify rates directly with even numbers of rates or specify an even number for num_rates along with min_rate and max_rate."
+        )
+      } else {
+        rates_data <-
+          data.table::data.table(
+            rate = rates_ls,
+            rate_rank = 1:length(rates_ls)
+          )
+      }
+    } else {
+      stop("Error: design_type you specified does not match any of the design type options available.")
     }
-  } else {
-    stop("Error: design_type you specified does not match any of the design type options available.")
+  }else{
+    rates_data <-
+      data.table::data.table(
+        rate = rates_ls,
+        rate_rank = 1:length(rates_ls)
+      )
   }
 
   return(rates_data)

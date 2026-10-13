@@ -167,6 +167,7 @@ assign_rates <- function(exp_data, rate_info) {
         dplyr::select(rate) %>%
         dplyr::mutate(strip_id = NA, plot_id = NA, type = "headland")
     )) %>%
+    dplyr::mutate(factor = rate_info$factor) %>%
     dplyr::mutate(input_type = list(
       dplyr::case_when(
         input_name == "seed" ~ "S",
@@ -246,8 +247,8 @@ assign_rates <- function(exp_data, rate_info) {
 #'  )
 #'
 #'assign_rates_conditional(
-#'  exp_data = exp_data, 
-#'  rate_info = seed_rate_info, 
+#'  exp_data = exp_data,
+#'  rate_info = seed_rate_info,
 #'  existing_design = td_single_input
 #')
 
@@ -1365,3 +1366,4 @@ check_replicates_single_input <- function(plots_with_rates_assigned) {
     message("Minimum number of treatment replications is less than or equal to 4. Please consider reducing the number of treatment levels.")
   }
 }
+
