@@ -298,7 +298,7 @@ viz <- function(td, type = "rates", input_index = c(1, 2), text_size = 3, abline
               ) +
               ggplot2::geom_sf(
                 data = data_for_plot,
-                ggplot2::aes(fill = factor(all_units)),
+                ggplot2::aes(fill = all_units),
                 color = "black"
               ) +
               scale_fill_brewer(name = legend_title, palette = "Greens") +
