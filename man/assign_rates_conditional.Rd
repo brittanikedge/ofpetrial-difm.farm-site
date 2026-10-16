@@ -54,8 +54,8 @@ seed_rate_info <-
  )
 
 assign_rates_conditional(
- exp_data = exp_data, 
- rate_info = seed_rate_info, 
+ exp_data = exp_data,
+ rate_info = seed_rate_info,
  existing_design = td_single_input
 )
 }

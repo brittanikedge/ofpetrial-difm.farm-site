@@ -15,7 +15,8 @@ prep_rate(
   design_type = NA,
   rank_seq_ws = NULL,
   rank_seq_as = NULL,
-  rate_jump_threshold = NA
+  rate_jump_threshold = NA,
+  factor = FALSE
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ prep_rate(
 \item{rank_seq_as}{(integer) vector of integers indicating the order of the ranking of the rates, which will be repeated "across" strip for their first plots.}
 
 \item{rate_jump_threshold}{(integer) highest jump in rate rank acceptable}
+
+\item{factor}{(boolean) Is treatment a factor rather than numeric?}
 }
 \value{
 data.frame of input rate information

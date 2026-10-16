@@ -167,7 +167,7 @@ assign_rates <- function(exp_data, rate_info) {
         dplyr::select(rate) %>%
         dplyr::mutate(strip_id = NA, plot_id = NA, type = "headland")
     )) %>%
-    dplyr::mutate(factor = rate_info$factor) %>%
+    dplyr::mutate(factor = plots_with_rates_assigned$factor) %>%
     dplyr::mutate(input_type = list(
       dplyr::case_when(
         input_name == "seed" ~ "S",

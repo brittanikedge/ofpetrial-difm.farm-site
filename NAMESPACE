@@ -20,18 +20,20 @@ import(data.table)
 import(ggplot2)
 import(leaflet)
 import(sf)
-importFrom(dplyr,arrange)
-importFrom(dplyr,case_when)
-importFrom(dplyr,filter)
-importFrom(dplyr,glimpse)
-importFrom(dplyr,left_join)
-importFrom(dplyr,mutate)
-importFrom(dplyr,nest_by)
-importFrom(dplyr,pull)
-importFrom(dplyr,relocate)
-importFrom(dplyr,rename)
-importFrom(dplyr,rowwise)
-importFrom(dplyr,select)
-importFrom(dplyr,slice)
-importFrom(dplyr,ungroup)
+importFrom(dplyr,
+  arrange,
+  case_when,
+  filter,
+  glimpse,
+  left_join,
+  mutate,
+  nest_by,
+  pull,
+  relocate,
+  rename,
+  rowwise,
+  select,
+  slice,
+  ungroup
+)
 importFrom(magrittr,"%>%")

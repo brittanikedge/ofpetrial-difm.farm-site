@@ -211,75 +211,132 @@ viz <- function(td, type = "rates", input_index = c(1, 2), text_size = 3, abline
           )
       }
     } else {
-
-      gg_td <-
-        td_rows %>%
-        dplyr::mutate(data_for_plot = list(
-          data.table::data.table(rate = unique(trial_design$rate)) %>%
-            .[, rata_equiv := convert_rates(input_name, unit, rate)] %>%
-            .[order(rate), ] %>%
-            .[, all_units := factor(paste(rate, " | ", rata_equiv))] %>%
-            .[rata_equiv == rate, all_units := factor(rate)] %>%
-            dplyr::left_join(trial_design, ., by = "rate")
-        )) %>%
-        dplyr::mutate(need_equiv_rate = list(
-          data.table(data_for_plot)[, all(rate != rata_equiv)]
-        )) %>%
-        dplyr::mutate(legend_title = list(
-          get_legend_title(
-            unit_system,
-            need_equiv_rate = FALSE,
-            input_name,
-            input_type,
-            unit
-          )
-        )) %>%
-        dplyr::mutate(g_tr = list(
-          ggplot2::ggplot() +
-            ggplot2::geom_sf(
-              data = field_sf,
-              fill = NA
-            ) +
-            ggplot2::geom_sf(
-              data = data_for_plot,
-              ggplot2::aes(fill = factor(all_units)),
-              color = "black"
-            ) +
-            scale_fill_brewer(name = legend_title, palette = "Greens") +
-            ggplot2::theme_void() +
-            ggplot2::ggtitle(
-              paste0(
-                "Trial design",
-                " (",
-                dplyr::case_when(
-                  design_type == "ls" ~ "Latin Square",
-                  design_type == "str" ~ "Strip",
-                  design_type == "rstr" ~ "Randomized Strip",
-                  design_type == "rb" ~ "Randomized Block",
-                  design_type == "ejca" ~ "Extra Jump-conscious Alternate",
-                  design_type == "sparse" ~ "Sparse",
-                  design_type == "niplorp" ~ "Nitrogen-induced Profit Loss Recovery Program"
-                ),
-                ")"
-              )
-            )
-        )) %>%
-        dplyr::mutate(g_fig = list(
-          if (abline == TRUE) {
-            g_tr +
-              ggplot2::geom_sf(data = ab_lines, ggplot2::aes(color = "applicator/planter ab-line")) +
-              ggplot2::geom_sf(data = harvest_ab_lines, ggplot2::aes(color = "harvester ab-line")) +
-              ggplot2::scale_color_manual(
-                name = "",
-                values = c(
-                  "applicator/planter ab-line" = "red", "harvester ab-line" = "blue"
+      if(td$factor == TRUE){
+        gg_td <-
+          td_rows %>%
+          dplyr::mutate(data_for_plot = list(
+            data.table::data.table(rate = unique(trial_design$rate)) %>%
+              .[, all_units := factor(paste(rate))] %>%
+              dplyr::left_join(trial_design, ., by = "rate")
+          )) %>%
+          dplyr::mutate(legend_title = list(paste0("Levels of ", td$input_name)
+          )) %>%
+          dplyr::mutate(g_tr = list(
+            ggplot2::ggplot() +
+              ggplot2::geom_sf(
+                data = field_sf,
+                fill = NA
+              ) +
+              ggplot2::geom_sf(
+                data = data_for_plot,
+                ggplot2::aes(fill = all_units),
+                color = "black"
+              ) +
+              scale_fill_brewer(name = legend_title, palette = "Greens") +
+              ggplot2::theme_void() +
+              ggplot2::ggtitle(
+                paste0(
+                  "Trial design",
+                  " (",
+                  dplyr::case_when(
+                    design_type == "ls" ~ "Latin Square",
+                    design_type == "str" ~ "Strip",
+                    design_type == "rstr" ~ "Randomized Strip",
+                    design_type == "rb" ~ "Randomized Block",
+                    design_type == "ejca" ~ "Extra Jump-conscious Alternate",
+                    design_type == "sparse" ~ "Sparse",
+                    design_type == "niplorp" ~ "Nitrogen-induced Profit Loss Recovery Program"
+                  ),
+                  ")"
                 )
               )
-          } else {
-            g_tr
-          }
-        )) %>%
-        dplyr::select(g_fig)
+          )) %>%
+          dplyr::mutate(g_fig = list(
+            if (abline == TRUE) {
+              g_tr +
+                ggplot2::geom_sf(data = ab_lines, ggplot2::aes(color = "applicator/planter ab-line")) +
+                ggplot2::geom_sf(data = harvest_ab_lines, ggplot2::aes(color = "harvester ab-line")) +
+                ggplot2::scale_color_manual(
+                  name = "",
+                  values = c(
+                    "applicator/planter ab-line" = "red", "harvester ab-line" = "blue"
+                  )
+                )
+            } else {
+              g_tr
+            }
+          )) %>%
+          dplyr::select(g_fig)
+      }else{
+        gg_td <-
+          td_rows %>%
+          dplyr::mutate(data_for_plot = list(
+            data.table::data.table(rate = unique(trial_design$rate)) %>%
+              .[, rata_equiv := convert_rates(input_name, unit, rate)] %>%
+              .[order(rate), ] %>%
+              .[, all_units := factor(paste(rate, " | ", rata_equiv))] %>%
+              .[rata_equiv == rate, all_units := factor(rate)] %>%
+              dplyr::left_join(trial_design, ., by = "rate")
+          )) %>%
+          dplyr::mutate(need_equiv_rate = list(
+            data.table(data_for_plot)[, all(rate != rata_equiv)]
+          )) %>%
+          dplyr::mutate(legend_title = list(
+            get_legend_title(
+              unit_system,
+              need_equiv_rate = FALSE,
+              input_name,
+              input_type,
+              unit
+            )
+          )) %>%
+          dplyr::mutate(g_tr = list(
+            ggplot2::ggplot() +
+              ggplot2::geom_sf(
+                data = field_sf,
+                fill = NA
+              ) +
+              ggplot2::geom_sf(
+                data = data_for_plot,
+                ggplot2::aes(fill = factor(all_units)),
+                color = "black"
+              ) +
+              scale_fill_brewer(name = legend_title, palette = "Greens") +
+              ggplot2::theme_void() +
+              ggplot2::ggtitle(
+                paste0(
+                  "Trial design",
+                  " (",
+                  dplyr::case_when(
+                    design_type == "ls" ~ "Latin Square",
+                    design_type == "str" ~ "Strip",
+                    design_type == "rstr" ~ "Randomized Strip",
+                    design_type == "rb" ~ "Randomized Block",
+                    design_type == "ejca" ~ "Extra Jump-conscious Alternate",
+                    design_type == "sparse" ~ "Sparse",
+                    design_type == "niplorp" ~ "Nitrogen-induced Profit Loss Recovery Program"
+                  ),
+                  ")"
+                )
+              )
+          )) %>%
+          dplyr::mutate(g_fig = list(
+            if (abline == TRUE) {
+              g_tr +
+                ggplot2::geom_sf(data = ab_lines, ggplot2::aes(color = "applicator/planter ab-line")) +
+                ggplot2::geom_sf(data = harvest_ab_lines, ggplot2::aes(color = "harvester ab-line")) +
+                ggplot2::scale_color_manual(
+                  name = "",
+                  values = c(
+                    "applicator/planter ab-line" = "red", "harvester ab-line" = "blue"
+                  )
+                )
+            } else {
+              g_tr
+            }
+          )) %>%
+          dplyr::select(g_fig)
+      }
     }
   } else if (type == "layout") {
     gg_td <-

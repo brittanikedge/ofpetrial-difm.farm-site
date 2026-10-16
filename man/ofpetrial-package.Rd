@@ -21,6 +21,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Taro Mieno \email{tmieno2@unl.edu} (\href{https://orcid.org/0000-0002-0614-0771}{ORCID}) [copyright holder]
   \item Brittani Edge \email{bedge2@illinois.edu} (\href{https://orcid.org/0009-0005-2051-1048}{ORCID}) [contributor]
 }
 
