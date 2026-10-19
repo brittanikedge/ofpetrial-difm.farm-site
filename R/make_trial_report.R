@@ -62,13 +62,12 @@ make_trial_report <- function(td, folder_path, trial_name = NA, keep_rmd = FALSE
           fill.scale = tmap::tm_scale_categorical(values = c("red", "grey"))
         )
     )) %>%
-    dplyr::mutate(total_input = list(
-      trial_design %>%
+    dplyr::mutate(total_input = list(if(factor == FALSE){trial_design %>%
         dplyr::mutate(area = as.numeric(st_area(.))) %>%
         dplyr::mutate(acres = area * 0.000247105) %>%
         dplyr::mutate(total_input = sum(acres * as.numeric(as.character(rate)))) %>%
         dplyr::pull(total_input) %>%
-        unique()
+        unique()}else{""}
     ))
 
   plots <- get_plots(all_trial_info)
@@ -620,6 +619,8 @@ get_input_type <- function(input) {
   }
 }
 
+# trial_design <- all_trial_info$trial_design[[1]]
+# land_unit <- all_trial_info$land_unit[[1]]
 get_field_size <- function(trial_design, land_unit) {
   trial_design %>%
     dplyr::mutate(area = as.numeric(st_area(.))) %>%
@@ -652,10 +653,10 @@ get_rate_number <- function(trial_design) {
 }
 
 get_trial_rates <- function(trial_design) {
-  trial_design %>%
-    dplyr::pull(rate) %>%
-    unique(.) %>%
-    sort(.)
+    trial_design %>%
+      dplyr::pull(rate) %>%
+      unique(.) %>%
+      sort(.)
 }
 
 rotate_vec <- function(vec, angle) {
@@ -1409,15 +1410,19 @@ to_title <- function(string) {
 
 text_total_input_amounts <- function(all_trial_info) {
   if (nrow(all_trial_info) == 1) {
-    paste0(
-      "The total amount of ",
-      all_trial_info$input_name[[1]],
-      " applied on the field will be ",
-      round(all_trial_info$total_input[[1]]),
-      " ",
-      all_trial_info$unit[1],
-      "."
-    )
+    if(all_trial_info$factor == FALSE){
+      paste0(
+        "The total amount of ",
+        all_trial_info$input_name[[1]],
+        " applied on the field will be ",
+        round(all_trial_info$total_input[[1]]),
+        " ",
+        all_trial_info$unit[1],
+        "."
+      )
+    }else{
+      ""
+    }
   } else if (nrow(all_trial_info) == 2 & length(all_trial_info$unit %>% unique()) == 1) {
     paste0(
       "The total amount of ",
@@ -1433,20 +1438,44 @@ text_total_input_amounts <- function(all_trial_info) {
       ", respectively."
     )
   } else {
-    paste0(
-      "The total amount of ",
-      all_trial_info$input_name[[1]],
-      " and ",
-      all_trial_info$input_name[[2]],
-      " applied on the field will be ",
-      round(all_trial_info$total_input[[1]]),
-      " ",
-      all_trial_info$unit[[1]],
-      " and ",
-      round(all_trial_info$total_input[[2]]),
-      " ",
-      all_trial_info$unit[[2]],
-      ", respectively."
-    )
+    if(all_trial_info$factor[1] == TRUE & all_trial_info$factor[2] == FALSE){
+      paste0(
+        "The total amount of ",
+        all_trial_info$input_name[[2]],
+        " applied on the field will be ",
+        round(all_trial_info$total_input[[2]]),
+        " ",
+        all_trial_info$unit[2],
+        "."
+      )
+    }else if(all_trial_info$factor[1] == FALSE & all_trial_info$factor[2] == TRUE){
+      paste0(
+        "The total amount of ",
+        all_trial_info$input_name[[1]],
+        " applied on the field will be ",
+        round(all_trial_info$total_input[[1]]),
+        " ",
+        all_trial_info$unit[1],
+        "."
+      )
+    }else if(all_trial_info$factor[1] == FALSE & all_trial_info$factor[2] == FALSE){
+      paste0(
+        "The total amount of ",
+        all_trial_info$input_name[[1]],
+        " and ",
+        all_trial_info$input_name[[2]],
+        " applied on the field will be ",
+        round(all_trial_info$total_input[[1]]),
+        " ",
+        all_trial_info$unit[[1]],
+        " and ",
+        round(all_trial_info$total_input[[2]]),
+        " ",
+        all_trial_info$unit[[2]],
+        ", respectively."
+      )
+    }else{
+      ""
+    }
   }
 }
