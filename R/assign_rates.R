@@ -167,7 +167,7 @@ assign_rates <- function(exp_data, rate_info) {
         dplyr::select(rate) %>%
         dplyr::mutate(strip_id = NA, plot_id = NA, type = "headland")
     )) %>%
-    dplyr::mutate(factor = plots_with_rates_assigned$factor) %>%
+    dplyr::mutate(factor = factor) %>%
     dplyr::mutate(input_type = list(
       dplyr::case_when(
         input_name == "seed" ~ "S",
@@ -1020,7 +1020,9 @@ get_rank_for_rb <- function(num_rates, data) {
 #+ Find the design for the second input
 #++++++++++++++++++++++++++++++++++++
 # This function is used internally in assign_rates().
-
+# first_design <- design_first_input
+# input_trial_data <- input_trial_data_with_rates[2, ]
+# rate_jump_threshold = NA
 get_design_for_second <- function(input_trial_data, first_design, rate_jump_threshold = NA) {
   #++++++++++++++++++++++++++++++++++++
   #+ Prepare basic information for the second input
@@ -1075,6 +1077,7 @@ get_design_for_second <- function(input_trial_data, first_design, rate_jump_thre
   #++++++++++++++++++++++++++++++++++++
   for (row_index in 1:num_plots) { # loop over the strips
 
+    # print(row_index)
     track_data <-
       data.table::data.table(
         plot_id = round(num_plots * seq(0.1, 1, by = 0.1), digits = 0)

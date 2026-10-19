@@ -211,75 +211,11 @@ viz <- function(td, type = "rates", input_index = c(1, 2), text_size = 3, abline
           )
       }
     } else {
-      if(td$factor == TRUE){
+        # visualization needs to consider factor inside here for each input
         gg_td <-
           td_rows %>%
           dplyr::mutate(data_for_plot = list(
-            data.table::data.table(rate = unique(trial_design$rate)) %>%
-              .[, all_units := factor(paste(rate))] %>%
-              dplyr::left_join(trial_design, ., by = "rate")
-          )) %>%
-          dplyr::mutate(legend_title = list(paste0("Levels of ", td$input_name)
-          )) %>%
-          dplyr::mutate(g_tr = list(
-            ggplot2::ggplot() +
-              ggplot2::geom_sf(
-                data = field_sf,
-                fill = NA
-              ) +
-              ggplot2::geom_sf(
-                data = data_for_plot,
-                ggplot2::aes(fill = all_units),
-                color = "black"
-              ) +
-              scale_fill_brewer(name = legend_title, palette = "Greens") +
-              ggplot2::theme_void() +
-              ggplot2::ggtitle(
-                paste0(
-                  "Trial design",
-                  " (",
-                  dplyr::case_when(
-                    design_type == "ls" ~ "Latin Square",
-                    design_type == "str" ~ "Strip",
-                    design_type == "rstr" ~ "Randomized Strip",
-                    design_type == "rb" ~ "Randomized Block",
-                    design_type == "ejca" ~ "Extra Jump-conscious Alternate",
-                    design_type == "sparse" ~ "Sparse",
-                    design_type == "niplorp" ~ "Nitrogen-induced Profit Loss Recovery Program"
-                  ),
-                  ")"
-                )
-              )
-          )) %>%
-          dplyr::mutate(g_fig = list(
-            if (abline == TRUE) {
-              g_tr +
-                ggplot2::geom_sf(data = ab_lines, ggplot2::aes(color = "applicator/planter ab-line")) +
-                ggplot2::geom_sf(data = harvest_ab_lines, ggplot2::aes(color = "harvester ab-line")) +
-                ggplot2::scale_color_manual(
-                  name = "",
-                  values = c(
-                    "applicator/planter ab-line" = "red", "harvester ab-line" = "blue"
-                  )
-                )
-            } else {
-              g_tr
-            }
-          )) %>%
-          dplyr::select(g_fig)
-      }else{
-        gg_td <-
-          td_rows %>%
-          dplyr::mutate(data_for_plot = list(
-            data.table::data.table(rate = unique(trial_design$rate)) %>%
-              .[, rata_equiv := convert_rates(input_name, unit, rate)] %>%
-              .[order(rate), ] %>%
-              .[, all_units := factor(paste(rate, " | ", rata_equiv))] %>%
-              .[rata_equiv == rate, all_units := factor(rate)] %>%
-              dplyr::left_join(trial_design, ., by = "rate")
-          )) %>%
-          dplyr::mutate(need_equiv_rate = list(
-            data.table(data_for_plot)[, all(rate != rata_equiv)]
+            make_data_for_plot(trial_design, input_name, unit, factor)
           )) %>%
           dplyr::mutate(legend_title = list(
             get_legend_title(
@@ -287,7 +223,8 @@ viz <- function(td, type = "rates", input_index = c(1, 2), text_size = 3, abline
               need_equiv_rate = FALSE,
               input_name,
               input_type,
-              unit
+              unit,
+              factor
             )
           )) %>%
           dplyr::mutate(g_tr = list(
@@ -336,7 +273,7 @@ viz <- function(td, type = "rates", input_index = c(1, 2), text_size = 3, abline
             }
           )) %>%
           dplyr::select(g_fig)
-      }
+
     }
   } else if (type == "layout") {
     gg_td <-
@@ -414,52 +351,51 @@ viz <- function(td, type = "rates", input_index = c(1, 2), text_size = 3, abline
 # ! Helper functions
 # !===========================================================
 
-get_legend_title <- function(unit_system, need_equiv_rate, input_name, input_type, unit) {
-  `%notin%` <- Negate(`%in%`)
+get_legend_title <- function(unit_system, need_equiv_rate, input_name, input_type, unit, factor) {
+  if(factor == FALSE){
+    `%notin%` <- Negate(`%in%`)
 
-  land_unit <- if (unit_system == "metric") {
-    "ha"
-  } else {
-    "ac"
-  }
+    land_unit <- if (unit_system == "metric") {
+      "ha"
+    } else {
+      "ac"
+    }
 
-  converted_unit <- if (unit_system == "metric") {
-    "kg"
-  } else {
-    "lb"
-  }
+    converted_unit <- if (unit_system == "metric") {
+      "kg"
+    } else {
+      "lb"
+    }
 
-  name <- if (!need_equiv_rate) {
-    paste0(to_title(input_name), " (", unit, "/", land_unit, ")")
-  } else if (need_equiv_rate) {
-    paste0(
-      to_title(input_name), " (", unit, "/", land_unit, ") | ",
-      input_type, " Equivalent (", converted_unit, "/", land_unit, ")"
-    )
+    name <- if (!need_equiv_rate) {
+      paste0(to_title(input_name), " (", unit, "/", land_unit, ")")
+    } else if (need_equiv_rate) {
+      paste0(
+        to_title(input_name), " (", unit, "/", land_unit, ") | ",
+        input_type, " Equivalent (", converted_unit, "/", land_unit, ")"
+      )
+    }
+  }else{
+    name = paste0("Levels of ", input_name)
   }
 
   return(name)
 }
 
-# td <- trial_design$trial_design[[1]]
-# trial_design <- trial_design[[1]]
-# input_name <- trial_design$input_name[1]
-# unit <- trial_design$unit[1]
-# get_plot_data <- function(td, input_name, unit, base_rate = NULL) {
-#   plot_data <-
-#     td %>%
-#     dplyr::mutate(
-#       tgt_rate_equiv = ifelse(
-#         input_name != "seed",
-#         convert_rates(input_name, unit, rate),
-#         rate
-#       )
-#     ) %>%
-#     dplyr::mutate(tgt_rate_original = rate) %>%
-#     dplyr::mutate(base_rate_original = ifelse(!is.null(base_rate), base_rate$rate, 0)) %>%
-#     dplyr::mutate(base_rate_equiv = ifelse(!is.null(base_rate), convert_rates(base_rate$input_name, base_rate$unit, base_rate_original), 0)) %>%
-#     dplyr::mutate(total_equiv = tgt_rate_equiv + base_rate_equiv)
-# }
+make_data_for_plot <- function(trial_design, input_name, unit, factor){
+  if(factor == FALSE){
+    data.table::data.table(rate = unique(trial_design$rate)) %>%
+      .[, rata_equiv := convert_rates(input_name, unit, rate)] %>%
+      .[order(rate), ] %>%
+      .[, all_units := factor(paste(rate, " | ", rata_equiv))] %>%
+      .[rata_equiv == rate, all_units := factor(rate)] %>%
+      dplyr::left_join(trial_design, ., by = "rate")
+  }else{
+    data.table::data.table(rate = unique(trial_design$rate)) %>%
+      .[, all_units := factor(paste(rate))] %>%
+      dplyr::left_join(trial_design, ., by = "rate")
+  }
+}
 
 get_palette_green <- function(num_rates) {
   return(my_palettes_green[n_rates == num_rates, my_palette][[1]])
