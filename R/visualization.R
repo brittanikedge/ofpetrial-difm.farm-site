@@ -385,10 +385,10 @@ get_legend_title <- function(unit_system, need_equiv_rate, input_name, input_typ
 make_data_for_plot <- function(trial_design, input_name, unit, factor){
   if(factor == FALSE){
     data.table::data.table(rate = unique(trial_design$rate)) %>%
-      .[, rata_equiv := convert_rates(input_name, unit, rate)] %>%
+      # .[, rata_equiv := convert_rates(input_name, unit, rate)] %>%
       .[order(rate), ] %>%
-      .[, all_units := factor(paste(rate, " | ", rata_equiv))] %>%
-      .[rata_equiv == rate, all_units := factor(rate)] %>%
+      .[, all_units := factor(paste(rate))] %>%
+      # .[rata_equiv == rate, all_units := factor(rate)] %>%
       dplyr::left_join(trial_design, ., by = "rate")
   }else{
     data.table::data.table(rate = unique(trial_design$rate)) %>%
