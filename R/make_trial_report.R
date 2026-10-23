@@ -279,13 +279,13 @@ text_rate_number <- function(all_trial_info) {
   if (nrow(all_trial_info) == 1) {
     paste0(
       as.character(get_number_in_english(all_trial_info$rate_number)),
-      " targeted ", all_trial_info$input_name, " rates."
+      " ", all_trial_info$input_name, " levels."
     )
   } else {
     if (all_trial_info$rate_number[[1]] == all_trial_info$rate_number[[2]]) {
-      paste0(as.character(get_number_in_english(all_trial_info$rate_number[[1]])), " targeted ", all_trial_info$input_name[[1]], " and ", all_trial_info$input_name[[2]], " rates.")
+      paste0(as.character(get_number_in_english(all_trial_info$rate_number[[1]])), " ", all_trial_info$input_name[[1]], " and ", all_trial_info$input_name[[2]], " levels.")
     } else {
-      paste0(as.character(get_number_in_english(all_trial_info$rate_number[[1]])), " targeted ", all_trial_info$input_name[[1]], " rates and ", as.character(get_number_in_english(all_trial_info$rate_number[[2]])), " targeted ", all_trial_info$input_name[[2]], " rates.")
+      paste0(as.character(get_number_in_english(all_trial_info$rate_number[[1]])), " ", all_trial_info$input_name[[1]], " levels and ", as.character(get_number_in_english(all_trial_info$rate_number[[2]])), " ", all_trial_info$input_name[[2]], " levels.")
     }
   }
 }
